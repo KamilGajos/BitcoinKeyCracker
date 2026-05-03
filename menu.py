@@ -12,27 +12,23 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QPalette
 
-# ═══════════════════════════════════════
-# SCIEZKA DO PLIKU (dziala w .app i normalnie)
-# ═══════════════════════════════════════
+# Path to resource file (works in .app and normal run)
 
 def get_resource_path(filename):
-    """Zwraca sciezke do pliku (dziala w zbudowanej .app i normalnie)"""
+    # Returns path to file (works in built .app and normal run)
     if getattr(sys, 'frozen', False):
-        # Zbudowana aplikacja PyInstaller
+        # Built PyInstaller application
         base_path = sys._MEIPASS
     else:
-        # Normalne uruchomienie python3 menu.py
+        # Normal python3 menu.py run
         base_path = os.path.dirname(os.path.abspath(__file__))
     
     return os.path.join(base_path, filename)
 
-# ═══════════════════════════════════════
-# WCZYTAJ ADRESY Z PLIKU
-# ═══════════════════════════════════════
+# Load addresses from file
 
 def load_targets(filename="adresy.txt"):
-    """Wczytuje adresy z pliku i zwraca slownik TARGETS"""
+    # Loads addresses from file and returns TARGETS dictionary
     targets = {}
     filepath = get_resource_path(filename)
     
@@ -51,9 +47,7 @@ TARGETS = load_targets("adresy.txt")
 
 UPDATE_CO = 100_000
 
-# ═══════════════════════════════════════
-# CRYPTO
-# ═══════════════════════════════════════
+# Crypto functions
 
 def private_to_address(private_key_bytes):
     sk = ecdsa.SigningKey.from_string(private_key_bytes, curve=ecdsa.SECP256k1)
@@ -65,9 +59,7 @@ def private_to_address(private_key_bytes):
     checksum = hashlib.sha256(hashlib.sha256(prefix).digest()).digest()[:4]
     return base58.b58encode(prefix + checksum).decode()
 
-# ═══════════════════════════════════════
-# WORKER THREAD
-# ═══════════════════════════════════════
+# Worker thread
 
 class BruteForceWorker(QThread):
     progress = pyqtSignal(int, str, float)
@@ -85,7 +77,7 @@ class BruteForceWorker(QThread):
         
         while self.running:
             private_key = os.urandom(32)
-            adres = private_to_address(private_key)
+            adres = private_to_address(private_key_bytes=private_key)
             proba += 1
             
             if adres in TARGETS:
@@ -102,9 +94,7 @@ class BruteForceWorker(QThread):
     def stop(self):
         self.running = False
 
-# ═══════════════════════════════════════
-# MAIN WINDOW
-# ═══════════════════════════════════════
+# Main window
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -191,7 +181,7 @@ class MainWindow(QMainWindow):
         
         layout.addLayout(stats_layout)
         
-        # Tabela
+        # Table
         self.table = QTableWidget()
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Time", "Probes", "Address"])
